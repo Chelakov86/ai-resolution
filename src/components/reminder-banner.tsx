@@ -3,15 +3,13 @@ import { needsReminder } from '@/lib/reminders'
 import type { Resolution, CheckInFrequency } from '@/types/database'
 
 interface Props {
-  resolutions: Array<Resolution & { last_log_at: string | null }>
+  activeResolutions: Array<Resolution & { last_log_at: string | null }>
   frequency: CheckInFrequency
 }
 
-export function ReminderBanners({ resolutions, frequency }: Props) {
-  const overdue = resolutions.filter(
-    (r) =>
-      r.status === 'active' &&
-      needsReminder(r.last_log_at ? new Date(r.last_log_at) : null, frequency)
+export function ReminderBanners({ activeResolutions, frequency }: Props) {
+  const overdue = activeResolutions.filter(
+    (r) => needsReminder(r.last_log_at ? new Date(r.last_log_at) : null, frequency)
   )
 
   if (overdue.length === 0) return null

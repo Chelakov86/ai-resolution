@@ -5,6 +5,9 @@ import { ResolutionCard } from '@/components/resolution-card'
 import { ReminderBanners } from '@/components/reminder-banner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import type { Resolution } from '@/types/database'
+
+type ResolutionWithMeta = Resolution & { last_log_at: string | null; log_count: number }
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -12,7 +15,7 @@ export default async function DashboardPage() {
   if (!user) redirect('/login')
 
   // Fetch profile + resolutions with log metadata in one query
-  const [{ data: profile }, { data: resolutions }] = await Promise.all([
+  const [{ data: profile }, { data: rawResolutions }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
     supabase.rpc('get_resolutions_with_log_meta', { p_user_id: user.id }),
   ])
@@ -24,10 +27,11 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
 
-  const active = (resolutions ?? []).filter((r: any) => r.status === 'active')
-  const archived = (resolutions ?? []).filter((r: any) => r.status !== 'active')
+  const typedResolutions = (rawResolutions ?? []) as ResolutionWithMeta[]
+  const active = typedResolutions.filter((r) => r.status === 'active')
+  const archived = typedResolutions.filter((r) => r.status !== 'active')
 
   return (
     <div>
@@ -40,7 +44,7 @@ export default async function DashboardPage() {
 
       {profile && (
         <ReminderBanners
-          resolutions={active}
+          activeResolutions={active}
           frequency={profile.check_in_frequency}
         />
       )}
@@ -67,7 +71,7 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {active.map((r: any) => <ResolutionCard key={r.id} resolution={r} />)}
+          {active.map((r) => <ResolutionCard key={r.id} resolution={r} />)}
         </div>
       )}
 
@@ -75,7 +79,7 @@ export default async function DashboardPage() {
         <div className="mt-10">
           <h2 className="text-sm font-medium text-gray-400 mb-3">Archived</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            {archived.map((r: any) => <ResolutionCard key={r.id} resolution={r} />)}
+            {archived.map((r) => <ResolutionCard key={r.id} resolution={r} />)}
           </div>
         </div>
       )}

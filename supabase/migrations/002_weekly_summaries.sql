@@ -28,6 +28,7 @@ RETURNS TABLE (
   FROM resolutions r
   LEFT JOIN progress_logs pl ON pl.resolution_id = r.id
   WHERE r.user_id = p_user_id
+    AND r.user_id = auth.uid()
   GROUP BY r.id
   ORDER BY r.created_at DESC
 $$ LANGUAGE sql SECURITY DEFINER;
