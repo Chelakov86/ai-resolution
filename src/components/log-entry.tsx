@@ -16,7 +16,7 @@ export function LogEntry({ log }: Props) {
   return (
     <div className="border rounded-lg p-4 space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">{new Date(log.created_at).toLocaleDateString()}</p>
+        <p className="text-sm text-gray-500">{new Date(log.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
         {log.ai_sentiment && (
           <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${SENTIMENT_STYLES[log.ai_sentiment]}`}>
             {SENTIMENT_ICONS[log.ai_sentiment]} {log.ai_sentiment}

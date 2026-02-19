@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { createProgressLog } from '@/actions/progress-logs'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -11,6 +11,7 @@ interface Props {
 }
 
 export function LogForm({ resolutionId }: Props) {
+  const formRef = useRef<HTMLFormElement>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -20,12 +21,14 @@ export function LogForm({ resolutionId }: Props) {
     const result = await createProgressLog(formData)
     if (result?.error) {
       setError(result.error)
+    } else {
+      formRef.current?.reset()
     }
     setLoading(false)
   }
 
   return (
-    <form action={handleSubmit} className="space-y-3">
+    <form ref={formRef} action={handleSubmit} className="space-y-3">
       <input type="hidden" name="resolution_id" value={resolutionId} />
       <div className="space-y-2">
         <Label htmlFor="note">Log an update</Label>

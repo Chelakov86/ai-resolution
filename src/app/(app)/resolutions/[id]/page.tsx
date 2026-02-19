@@ -19,11 +19,13 @@ export default async function ResolutionPage({ params }: Props) {
 
   const [{ data: resolution }, { data: logs }] = await Promise.all([
     supabase.from('resolutions').select('*').eq('id', id).eq('user_id', user.id).single(),
-    supabase.from('progress_logs').select('*').eq('resolution_id', id)
+    supabase.from('progress_logs').select('*').eq('resolution_id', id).eq('user_id', user.id)
       .order('created_at', { ascending: false }),
   ])
 
   if (!resolution) notFound()
+
+  const logList = logs ?? []
 
   return (
     <div className="max-w-2xl">
@@ -63,9 +65,9 @@ export default async function ResolutionPage({ params }: Props) {
 
       <div className="space-y-3">
         <h2 className="font-semibold text-sm text-gray-500">
-          {logs?.length ?? 0} {logs?.length === 1 ? 'update' : 'updates'}
+          {logList.length} {logList.length === 1 ? 'update' : 'updates'}
         </h2>
-        {(logs ?? []).map((log) => <LogEntry key={log.id} log={log} />)}
+        {logList.map((log) => <LogEntry key={log.id} log={log} />)}
       </div>
     </div>
   )
