@@ -27,6 +27,7 @@ export default async function SettingsPage() {
             <div className="space-y-2">
               <Label htmlFor="check_in_frequency">Reminder frequency</Label>
               <select
+                id="check_in_frequency"
                 name="check_in_frequency"
                 defaultValue={profile.check_in_frequency}
                 className="w-full border rounded-md px-3 py-2 text-sm bg-white"
