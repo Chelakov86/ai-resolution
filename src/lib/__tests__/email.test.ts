@@ -25,6 +25,17 @@ describe('buildCheckinEmail', () => {
     })
     expect(result.text).toBe('')
   })
+
+  it('renders "never logged" when daysSinceLog is null', () => {
+    const result = buildCheckinEmail({
+      userName: 'Alice',
+      overdueResolutions: [
+        { id: 'abc', title: 'Learn Spanish', daysSinceLog: null },
+      ],
+      appUrl: 'https://example.com',
+    })
+    expect(result.text).toContain('never logged')
+  })
 })
 
 describe('buildSummaryEmail', () => {

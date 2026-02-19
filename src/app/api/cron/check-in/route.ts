@@ -33,43 +33,51 @@ export async function GET(request: Request) {
 
     if (!resolutions?.length) continue
 
+    // Batch query: fetch all logs for all active resolutions in one round-trip
+    const resolutionIds = resolutions.map((r) => r.id)
+    const { data: allLogs } = await supabase
+      .from('progress_logs')
+      .select('resolution_id, created_at')
+      .in('resolution_id', resolutionIds)
+      .order('created_at', { ascending: false })
+
+    // Build map of resolution_id → latest log date (first occurrence = newest due to desc order)
+    const lastLogMap = new Map<string, Date>()
+    for (const log of allLogs ?? []) {
+      if (!lastLogMap.has(log.resolution_id)) {
+        lastLogMap.set(log.resolution_id, new Date(log.created_at))
+      }
+    }
+
     // Get last log date per resolution
-    const overdueResolutions: Array<{ id: string; title: string; daysSinceLog: number }> = []
+    const overdueResolutions: Array<{ id: string; title: string; daysSinceLog: number | null }> = []
 
     for (const resolution of resolutions) {
-      const { data: lastLog } = await supabase
-        .from('progress_logs')
-        .select('created_at')
-        .eq('resolution_id', resolution.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-      const lastLogDate = lastLog ? new Date(lastLog.created_at) : null
+      const lastLogDate = lastLogMap.get(resolution.id) ?? null
       if (needsReminder(lastLogDate, profile.check_in_frequency)) {
         const daysSinceLog = lastLogDate
           ? Math.floor((Date.now() - lastLogDate.getTime()) / 86400000)
-          : 999
+          : null
         overdueResolutions.push({ id: resolution.id, title: resolution.title, daysSinceLog })
       }
     }
 
     if (overdueResolutions.length === 0) continue
 
-    const { data: authUser } = await supabase.auth.admin.getUserById(profile.id)
-    if (!authUser.user?.email) continue
-
-    const { subject, text } = buildCheckinEmail({
-      userName: profile.name,
-      overdueResolutions,
-      appUrl: APP_URL,
-    })
-
     try {
+      const { data: authUser } = await supabase.auth.admin.getUserById(profile.id)
+      if (!authUser?.user?.email) continue
+
+      const { subject, text } = buildCheckinEmail({
+        userName: profile.name,
+        overdueResolutions,
+        appUrl: APP_URL,
+      })
+
       await sendEmail({ to: authUser.user.email, subject, text })
       sent++
     } catch (e) {
-      console.error(`Failed to send check-in to ${authUser.user.email}:`, e)
+      console.error(`Failed to send check-in for profile ${profile.id}:`, e)
     }
   }
 

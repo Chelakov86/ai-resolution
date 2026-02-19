@@ -47,15 +47,15 @@ export async function GET(request: Request) {
       const summary = await generateWeeklySummary({ userName: profile.name, logs: formattedLogs })
       if (!summary) continue
 
-      // Save to DB for dashboard display
-      await supabase.from('weekly_summaries').insert({ user_id: profile.id, summary })
-
       // Send email
       const { data: authUser } = await supabase.auth.admin.getUserById(profile.id)
-      if (authUser.user?.email) {
+      if (authUser?.user?.email) {
         const { subject, text } = buildSummaryEmail({ userName: profile.name, summary, appUrl: APP_URL })
         await sendEmail({ to: authUser.user.email, subject, text })
       }
+
+      // Save to DB for dashboard display (only after email is delivered without error)
+      await supabase.from('weekly_summaries').insert({ user_id: profile.id, summary })
 
       processed++
     } catch (e) {
