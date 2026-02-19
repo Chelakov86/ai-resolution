@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/check-in",
+      "schedule": "0 9 * * 1,4"
+    },
+    {
+      "path": "/api/cron/weekly-summary",
+      "schedule": "0 20 * * 0"
+    }
+  ]
+}
