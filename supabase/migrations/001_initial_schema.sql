@@ -53,29 +53,47 @@ ALTER TABLE resolutions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE progress_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE check_in_records ENABLE ROW LEVEL SECURITY;
 
--- Profiles: users can only access their own
-CREATE POLICY "profiles_self" ON profiles
-  FOR ALL USING (auth.uid() = id);
+-- Profiles
+CREATE POLICY "profiles_select" ON profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "profiles_insert" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "profiles_update" ON profiles FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+CREATE POLICY "profiles_delete" ON profiles FOR DELETE USING (auth.uid() = id);
 
--- Resolutions: users can only access their own
-CREATE POLICY "resolutions_self" ON resolutions
-  FOR ALL USING (auth.uid() = user_id);
+-- Resolutions
+CREATE POLICY "resolutions_select" ON resolutions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "resolutions_insert" ON resolutions FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "resolutions_update" ON resolutions FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "resolutions_delete" ON resolutions FOR DELETE USING (auth.uid() = user_id);
 
--- Progress logs: users can only access their own
-CREATE POLICY "progress_logs_self" ON progress_logs
-  FOR ALL USING (auth.uid() = user_id);
+-- Progress logs
+CREATE POLICY "progress_logs_select" ON progress_logs FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "progress_logs_insert" ON progress_logs FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "progress_logs_update" ON progress_logs FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "progress_logs_delete" ON progress_logs FOR DELETE USING (auth.uid() = user_id);
 
--- Check-in records: users can only access their own
-CREATE POLICY "check_in_records_self" ON check_in_records
-  FOR ALL USING (auth.uid() = user_id);
+-- Check-in records
+CREATE POLICY "check_in_records_select" ON check_in_records FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "check_in_records_insert" ON check_in_records FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "check_in_records_update" ON check_in_records FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "check_in_records_delete" ON check_in_records FOR DELETE USING (auth.uid() = user_id);
+
+-- Performance indexes
+CREATE INDEX idx_resolutions_user_id ON resolutions(user_id);
+CREATE INDEX idx_progress_logs_resolution_created ON progress_logs(resolution_id, created_at DESC);
+CREATE INDEX idx_progress_logs_user_created ON progress_logs(user_id, created_at DESC);
 
 -- Auto-create profile when user signs up
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO profiles (id, name)
-  VALUES (NEW.id, NEW.raw_user_meta_data->>'name');
+  VALUES (NEW.id, NEW.raw_user_meta_data->>'name')
+  ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE WARNING 'handle_new_user failed for user %: %', NEW.id, SQLERRM;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
