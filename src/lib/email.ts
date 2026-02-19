@@ -38,12 +38,13 @@ export async function sendEmail(params: {
   to: string
   subject: string
   text: string
-}) {
+}): Promise<void> {
   const resend = new Resend(process.env.RESEND_API_KEY)
-  await resend.emails.send({
-    from: 'Resolutions <noreply@yourdomain.com>',  // Update with your verified domain
+  const { error } = await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL ?? 'Resolutions <noreply@yourdomain.com>',
     to: params.to,
     subject: params.subject,
     text: params.text,
   })
+  if (error) throw new Error(`Resend error: ${error.message}`)
 }
