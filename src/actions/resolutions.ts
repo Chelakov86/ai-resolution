@@ -11,7 +11,8 @@ export async function createResolution(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const title = formData.get('title') as string
+  const title = (formData.get('title') as string | null)?.trim()
+  if (!title) return { error: 'Title is required' }
   const description = formData.get('description') as string
   const target_date = formData.get('target_date') as string | null
 
