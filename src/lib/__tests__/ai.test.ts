@@ -20,6 +20,12 @@ describe('parseEnrichmentResponse', () => {
     expect(result.progress_estimate).toBe(100)
   })
 
+  it('clamps progress_estimate to minimum of 0', () => {
+    const json = JSON.stringify({ sentiment: 'neutral', progress_estimate: -10, feedback: 'ok' })
+    const result = parseEnrichmentResponse(json)
+    expect(result.progress_estimate).toBe(0)
+  })
+
   it('defaults to neutral on invalid sentiment', () => {
     const json = JSON.stringify({ sentiment: 'amazing', progress_estimate: 50, feedback: 'ok' })
     const result = parseEnrichmentResponse(json)

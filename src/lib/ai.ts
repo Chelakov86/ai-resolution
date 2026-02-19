@@ -25,6 +25,9 @@ function getAI(): GoogleGenAI {
 
 export function parseEnrichmentResponse(text: string): EnrichmentResult {
   const data = JSON.parse(text)
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    throw new Error('Expected a JSON object from AI response')
+  }
   const sentiment = VALID_SENTIMENTS.includes(data.sentiment) ? data.sentiment : 'neutral'
   const progress_estimate = Math.min(100, Math.max(0, Number(data.progress_estimate) || 0))
   return { sentiment, progress_estimate, feedback: String(data.feedback || '') }
@@ -32,6 +35,9 @@ export function parseEnrichmentResponse(text: string): EnrichmentResult {
 
 export function parseCategoryResponse(text: string): CategoryResult {
   const data = JSON.parse(text)
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    throw new Error('Expected a JSON object from AI response')
+  }
   const category = VALID_CATEGORIES.includes(data.category) ? data.category : null
   return { category, framing: String(data.framing || '') }
 }
@@ -88,7 +94,7 @@ Respond with this exact JSON structure:
 
 export async function generateWeeklySummary(params: {
   userName: string | null
-  logs: Array<{ resolution_title: string; note: string; ai_sentiment: string | null; created_at: string }>
+  logs: Array<{ resolution_title: string; note: string; ai_sentiment: Sentiment | null; created_at: string }>
 }): Promise<string> {
   if (params.logs.length === 0) return ''
 
