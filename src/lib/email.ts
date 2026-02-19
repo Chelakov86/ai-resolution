@@ -2,7 +2,7 @@ import { Resend } from 'resend'
 
 interface CheckinEmailParams {
   userName: string | null
-  overdueResolutions: Array<{ id: string; title: string; daysSinceLog: number }>
+  overdueResolutions: Array<{ id: string; title: string; daysSinceLog: number | null }>
   appUrl: string
 }
 
@@ -17,7 +17,10 @@ export function buildCheckinEmail(params: CheckinEmailParams): { subject: string
 
   const name = params.userName ?? 'there'
   const lines = params.overdueResolutions
-    .map((r) => `• ${r.title} (${r.daysSinceLog} days since last log)\n  ${params.appUrl}/resolutions/${r.id}`)
+    .map((r) => {
+      const when = r.daysSinceLog !== null ? `${r.daysSinceLog} days since last log` : 'never logged'
+      return `• ${r.title} (${when})\n  ${params.appUrl}/resolutions/${r.id}`
+    })
     .join('\n\n')
 
   return {
