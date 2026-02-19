@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 
 export default function NewResolutionPage() {
   const [loading, setLoading] = useState(false)
@@ -27,9 +27,9 @@ export default function NewResolutionPage() {
       <h1 className="text-2xl font-bold mb-6">New Resolution</h1>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base text-gray-500 font-normal">
+          <CardDescription>
             AI will suggest a category and motivational framing automatically.
-          </CardTitle>
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form action={handleSubmit} className="space-y-4">
@@ -40,6 +40,7 @@ export default function NewResolutionPage() {
                 name="title"
                 placeholder="e.g. Run a 5K by summer"
                 required
+                maxLength={200}
               />
             </div>
             <div className="space-y-2">
