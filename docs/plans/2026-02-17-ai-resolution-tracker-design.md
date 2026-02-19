@@ -17,7 +17,7 @@ A personal resolution tracker web app with AI-powered progress logging, sentimen
 |-------|-----------|
 | Framework | Next.js 15 (App Router, TypeScript) |
 | Database + Auth | Supabase (PostgreSQL + email/magic link auth) |
-| AI | Claude API (`claude-sonnet-4-6`) via server actions |
+| AI | Google Gemini API (`gemini-3-flash-preview`) via server actions |
 | Email | Resend |
 | UI | Tailwind CSS + shadcn/ui |
 | Hosting + Cron | Vercel |
@@ -92,22 +92,22 @@ Tracks last nudge sent per resolution to avoid over-notifying.
 
 ## AI Features
 
-All Claude API calls are made from Next.js server actions. No AI calls from the client.
+All Gemini API calls are made from Next.js server actions. No AI calls from the client.
 
 ### 1. Category Suggestion (resolution creation)
-When the user finishes typing a title/description, a server action calls Claude to suggest:
+When the user finishes typing a title/description, a server action calls Gemini to suggest:
 - A category from the enum
 - A short "why this matters" framing sentence
 
 User can accept or override both.
 
 ### 2. Progress Log Enrichment (core AI loop)
-On progress log submit, Claude receives:
+On progress log submit, Gemini receives:
 - The resolution title + description
 - The last 5 progress logs (for context)
 - The new note
 
-Claude returns:
+Gemini returns:
 - `sentiment`: positive / neutral / negative
 - `progress_estimate`: 0–100 integer
 - `feedback`: 1–2 sentences of specific, encouraging coaching
@@ -115,7 +115,7 @@ Claude returns:
 Stored in `progress_logs` alongside the raw note.
 
 ### 3. Weekly AI Summary (cron)
-Every Sunday, a Vercel cron job fetches each user's week of logs and calls Claude to produce a short paragraph covering:
+Every Sunday, a Vercel cron job fetches each user's week of logs and calls Gemini to produce a short paragraph covering:
 - What went well
 - What stalled
 - One concrete suggestion for next week
@@ -124,7 +124,7 @@ Displayed as a card on the dashboard and optionally emailed.
 
 **Boundaries:**
 - AI does not auto-create resolutions or logs — user always initiates
-- Each Claude call receives relevant logs as context (no persistent memory)
+- Each Gemini call receives relevant logs as context (no persistent memory)
 
 ---
 
