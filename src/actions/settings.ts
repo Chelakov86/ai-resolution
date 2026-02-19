@@ -7,14 +7,14 @@ import type { CheckInFrequency } from '@/types/database'
 
 const VALID_FREQUENCIES: CheckInFrequency[] = ['daily', 'every_3_days', 'weekly']
 
-export async function updateSettings(formData: FormData) {
+export async function updateSettings(formData: FormData): Promise<void> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
   const check_in_frequency = formData.get('check_in_frequency') as string
   if (!VALID_FREQUENCIES.includes(check_in_frequency as CheckInFrequency)) {
-    return { error: 'Invalid check-in frequency' }
+    throw new Error('Invalid check-in frequency')
   }
 
   const { error } = await supabase.from('profiles').update({
@@ -23,6 +23,6 @@ export async function updateSettings(formData: FormData) {
     email_summary_enabled: formData.get('email_summary_enabled') === 'on',
   }).eq('id', user.id)
 
-  if (error) return { error: error.message }
+  if (error) throw new Error(error.message)
   revalidatePath('/settings')
 }
